@@ -32,11 +32,14 @@ function App() {
 		.then(response => {
 			setTransactions(response.data);
 			const grouped = _.groupBy(response.data.transactions, t => { return t.amount < 0 ? 'withdrawls' : 'deposits'});
-			const totalDeposits = _.sumBy(grouped.deposits, 'amount');
 			let depositGroups = _.groupBy(grouped.deposits, 'payee_name');
-			console.log(depositGroups);
 			delete depositGroups['Manual Balance Adjustment'];
-			console.log(Object.keys(depositGroups).length);
+			delete depositGroups['Starting Balance'];
+			delete depositGroups['Transfer : RBC - Chequing'];
+			let totalDeposits = 0;
+			_.forOwn(depositGroups, (element, name) => {
+				totalDeposits+=_.sumBy(element, 'amount');;
+			});
 			let dn = [];
 			let dl = [];
 			_.forOwn(depositGroups, (element, name) => {
@@ -49,7 +52,8 @@ function App() {
 				dl.push({
 					"source": dn.length-1,
 					"target": Object.keys(depositGroups).length,
-					"value": element.total
+					"value": element.total/1000,
+					"percentage": Number((element.total/totalDeposits)*100).toFixed(2)
 				})
 			});
 			dn.push({
@@ -57,7 +61,6 @@ function App() {
 				"name": 'Total Deposits',
 				"color": "#00FF00"
 			})
-			console.log(dn, dl)
 			setDepositsData({"nodes": dn, "links": dl});
 		})
 	}, []);
@@ -67,7 +70,7 @@ function App() {
 	return (
 		<div className="App">
 			<header className="App-header">
-				{console.log(transactions)}
+				{/* {console.log(transactions)} */}
 				{/* <SankeyChart data={testData} style={{width: '100vh', height: '100vh'}}/> */}
 				{depositsData && <SankeyChart data={depositsData} style={{width: '100vh', height: '100vh'}}/> }
 			</header>

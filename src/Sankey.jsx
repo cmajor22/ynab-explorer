@@ -22,7 +22,7 @@ const SankeyChart = ({ data }) => {
 
     const { nodes, links } = s(data);
 
-    svg.append('g')
+    const chartNodes = svg.append('g')
       .selectAll('.link')
       .data(links)
       .enter().append('path')
@@ -30,7 +30,7 @@ const SankeyChart = ({ data }) => {
         .attr('d', sankeyLinkHorizontal())
         .attr('stroke-width', d => Math.max(1, d.width))
         .style('fill', 'none')
-        .style('stroke-opacity', .3)
+        .style('stroke-opacity', .2)
         // .style('stroke', '#FFF')
         .style('stroke', d => {
           if (d.target.color) {
@@ -38,6 +38,8 @@ const SankeyChart = ({ data }) => {
           }
           return d.source.color;
         });
+
+    chartNodes.append("title").text((item) => `${item.source.name}: $${item.value} (${item.percentage}%)`)
 
     svg.append('g')
       .selectAll('.node')
@@ -53,6 +55,20 @@ const SankeyChart = ({ data }) => {
         .style('fill-opacity', 0.5)
         .style('marginLeft', '20px')
         // .style('stroke', '#000');
+
+
+    svg.append("g")
+      .attr("font-family", 'roboto')
+      .attr("font-size", 16)
+      .attr('fill', '#e1e1e1')
+      .selectAll("text")
+      .data(nodes)
+      .join("text")
+      .attr("x", d => d.x0 < width / 2 ? d.x1 + 8 : d.x0 - 2)
+      .attr("y", d => (d.y1 + d.y0) / 2)
+      .attr("dy", "0.35em")
+      .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
+      .text((item) => {return item.name});
 
   }, [data]);
 
