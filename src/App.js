@@ -1,36 +1,40 @@
 import logo from './logo.svg';
 import './App.css';
 import { useEffect, useState } from 'react';
-import { Typography } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
 import * as d3 from 'd3';
 import { sankey } from 'd3-sankey';
 import SankeyChart from './Sankey';
 import _ from 'lodash';
 
 const ynab = require("ynab");
-const accessToken = "yMspI9EDYV4fS8pn8AYrIGmWs40JExkbWlxxDsY95xY";
+const accessToken = "FAdGiTXXLgc4TnRrMuTidtwNzDiBuXnF6-f_8yJwOsA";
 const ynabAPI = new ynab.API(accessToken);
 
 
 function App() {
-	const [budgets, setBudgets] = useState('');
-	const [months, setMonths] = useState('');
+	const [budgets, setBudgets] = useState([]);
+	const [selectedBudget, setSelectedBudget] = useState('');
+	// const [months, setMonths] = useState('');
 	const [transactions, setTransactions] = useState('');
 	const [depositsData, setDepositsData] = useState(null);
 
 	
 	useEffect(() => {
-		// ynabAPI.budgets.getBudgets()
-		// .then(response => {
-		// 	setBudgets(response.data.budgets);
-		// });
+		ynabAPI.budgets.getBudgets()
+		.then(response => {
+			setBudgets(response.data.budgets);
+		});
 		// ynabAPI.months.getBudgetMonths("bee2ca8b-ea67-4c8e-a45f-450d55947917")
 		// .then(response => {
 		// 	setMonths(response.data);
 		// })
-		ynabAPI.transactions.getTransactions("bee2ca8b-ea67-4c8e-a45f-450d55947917")
+	}, []);
+
+	useEffect(() => {
+		console.log(selectedBudget)
+		ynabAPI.transactions.getTransactions(selectedBudget)
 		.then(response => {
-			setTransactions(response.data);
 			const grouped = _.groupBy(response.data.transactions, t => { return t.amount < 0 ? 'withdrawls' : 'deposits'});
 			let depositGroups = _.groupBy(grouped.deposits, 'payee_name');
 			delete depositGroups['Manual Balance Adjustment'];
@@ -52,7 +56,7 @@ function App() {
 				dl.push({
 					"source": dn.length-1,
 					"target": Object.keys(depositGroups).length,
-					"value": element.total/1000,
+					"value": Number(element.total/1000),
 					"percentage": Number((element.total/totalDeposits)*100).toFixed(2)
 				})
 			});
@@ -63,8 +67,7 @@ function App() {
 			})
 			setDepositsData({"nodes": dn, "links": dl});
 		})
-	}, []);
-		
+	}, [selectedBudget])
 	
 	
 	return (
@@ -72,6 +75,22 @@ function App() {
 			<header className="App-header">
 				{/* {console.log(transactions)} */}
 				{/* <SankeyChart data={testData} style={{width: '100vh', height: '100vh'}}/> */}
+
+				<FormControl>
+					<InputLabel id="budget-label">Budget</InputLabel>
+					<Select
+						labelId="budget-label"
+						id="budget-select"
+						value={selectedBudget}
+						label="Budget"
+						onChange={(e) => {setSelectedBudget(e.target.value)}}
+						style={{width: '300px'}}
+					>
+						{budgets.map((budget) => {
+							return <MenuItem value={budget.id}>{budget.name}</MenuItem>
+						})}
+					</Select>
+					</FormControl>
 				{depositsData && <SankeyChart data={depositsData} style={{width: '100vh', height: '100vh'}}/> }
 			</header>
 		</div>
