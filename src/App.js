@@ -16,17 +16,17 @@ function App() {
 	const [budgets, setBudgets] = useState([]);
 	const [selectedBudget, setSelectedBudget] = useState('');
 	// const [months, setMonths] = useState('');
-	const [transactions, setTransactions] = useState('');
+	const [baseTransactions, setBaseTransactions] = useState([]);
+	const [transactions, setTransactions] = useState([]);
 	const [depositsData, setDepositsData] = useState(null);
 	const [years, setYears] = useState([]);
-	const [reportType, setReportType] = useState('');
-	const [reportMonth, setReportMonth] = useState('');
+	const [reportType, setReportType] = useState('All');
+	const [reportMonth, setReportMonth] = useState('All');
 	const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "All"];
 
 	const handleReportType = (event, newReportType) => {
 		setReportType(newReportType);
 	}
-
 	
 	useEffect(() => {
 		ynabAPI.budgets.getBudgets()
@@ -39,48 +39,68 @@ function App() {
 		// })
 	}, []);
 
+	useEffect(()=>{
+		if(budgets.length===1) {
+			setSelectedBudget(budgets[0].id)
+		}
+	}, [budgets])
+
 	useEffect(() => {
 		ynabAPI.transactions.getTransactions(selectedBudget)
 		.then(response => {
-			const minDate = response.data.transactions[0].date;
-			const maxDate = response.data.transactions[response.data.transactions.length-1].date;
-			console.log(minDate, maxDate)
-			const grouped = _.groupBy(response.data.transactions, t => { return t.amount < 0 ? 'withdrawls' : 'deposits'});
-			let depositGroups = _.groupBy(grouped.deposits, 'payee_name');
+			setBaseTransactions(response.data.transactions);
+			setTransactions(response.data.transactions);
 			setYears(_.uniqBy(response.data.transactions, t => {return t.date.substring(0,4)}).map((y) => y.date));
-			console.log(years)
-			delete depositGroups['Manual Balance Adjustment'];
-			delete depositGroups['Starting Balance'];
-			delete depositGroups['Transfer : RBC - Chequing'];
-			let totalDeposits = 0;
-			_.forOwn(depositGroups, (element, name) => {
-				totalDeposits+=_.sumBy(element, 'amount');;
-			});
-			let dn = [];
-			let dl = [];
-			_.forOwn(depositGroups, (element, name) => {
-				element.total = _.sumBy(element, 'amount');
-				dn.push({
-					"node": dn.length,
-					"name": name,
-					"color": "#00FF00"
-				});
-				dl.push({
-					"source": dn.length-1,
-					"target": Object.keys(depositGroups).length,
-					"value": Number(element.total/1000),
-					"percentage": Number((element.total/totalDeposits)*100).toFixed(2)
-				})
-			});
+		})
+	}, [selectedBudget]);
+
+	useEffect(() => {
+		const grouped = _.groupBy(transactions, t => { return t.amount < 0 ? 'withdrawls' : 'deposits'});
+		let depositGroups = _.groupBy(grouped.deposits, 'payee_name');
+		delete depositGroups['Manual Balance Adjustment'];
+		delete depositGroups['Starting Balance'];
+		delete depositGroups['Transfer : RBC - Chequing'];
+		let totalDeposits = 0;
+		_.forOwn(depositGroups, (element, name) => {
+			totalDeposits+=_.sumBy(element, 'amount');;
+		});
+		let dn = [];
+		let dl = [];
+		_.forOwn(depositGroups, (element, name) => {
+			element.total = _.sumBy(element, 'amount');
 			dn.push({
 				"node": dn.length,
-				"name": 'Total Deposits',
+				"name": name,
 				"color": "#00FF00"
+			});
+			dl.push({
+				"source": dn.length-1,
+				"target": Object.keys(depositGroups).length,
+				"value": Number(element.total/1000),
+				"percentage": Number((element.total/totalDeposits)*100).toFixed(2)
 			})
-			setDepositsData({"nodes": dn, "links": dl});
+		});
+		dn.push({
+			"node": dn.length,
+			"name": 'Total Deposits',
+			"color": "#00FF00"
 		})
-	}, [selectedBudget])
-	
+		setDepositsData({"nodes": dn, "links": dl});
+	}, [transactions])
+
+	useEffect(() => {
+		if(reportType==="All"){
+			setTransactions(baseTransactions);
+		}else{
+			if(reportMonth==="All") {
+				console.log(baseTransactions)
+			}else{
+
+			}
+		}
+	}, [reportType, reportMonth]);
+
+
 	
 	return (
 		<div className="App">
