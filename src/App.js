@@ -1,7 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 import { useEffect, useState } from 'react';
-import { FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import * as d3 from 'd3';
 import { sankey } from 'd3-sankey';
 import SankeyChart from './Sankey';
@@ -18,6 +18,14 @@ function App() {
 	// const [months, setMonths] = useState('');
 	const [transactions, setTransactions] = useState('');
 	const [depositsData, setDepositsData] = useState(null);
+	const [years, setYears] = useState([]);
+	const [reportType, setReportType] = useState('');
+	const [reportMonth, setReportMonth] = useState('');
+	const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "All"];
+
+	const handleReportType = (event, newReportType) => {
+		setReportType(newReportType);
+	}
 
 	
 	useEffect(() => {
@@ -32,11 +40,15 @@ function App() {
 	}, []);
 
 	useEffect(() => {
-		console.log(selectedBudget)
 		ynabAPI.transactions.getTransactions(selectedBudget)
 		.then(response => {
+			const minDate = response.data.transactions[0].date;
+			const maxDate = response.data.transactions[response.data.transactions.length-1].date;
+			console.log(minDate, maxDate)
 			const grouped = _.groupBy(response.data.transactions, t => { return t.amount < 0 ? 'withdrawls' : 'deposits'});
 			let depositGroups = _.groupBy(grouped.deposits, 'payee_name');
+			setYears(_.uniqBy(response.data.transactions, t => {return t.date.substring(0,4)}).map((y) => y.date));
+			console.log(years)
 			delete depositGroups['Manual Balance Adjustment'];
 			delete depositGroups['Starting Balance'];
 			delete depositGroups['Transfer : RBC - Chequing'];
@@ -90,7 +102,27 @@ function App() {
 							return <MenuItem value={budget.id}>{budget.name}</MenuItem>
 						})}
 					</Select>
-					</FormControl>
+				</FormControl>
+				<ToggleButtonGroup
+					value={reportType}
+					exclusive
+					onChange={handleReportType}
+					>
+					{years.map((year) => {
+						return <ToggleButton value={year.substring(0,4)}><Typography>{year.substring(0,4)}</Typography></ToggleButton>
+					})}
+					<ToggleButton value="All"><Typography>All</Typography></ToggleButton>
+					<ToggleButton value="Custom"><Typography>Custom</Typography></ToggleButton>
+				</ToggleButtonGroup>
+				{reportType !== 'All' && reportType !== 'Custom' && <ToggleButtonGroup
+					value={reportMonth}
+					exclusive
+					onChange={(e) => {setReportMonth(e.target.value)}}
+					>
+					{months.map((month) => {
+						return <ToggleButton value={month}><Typography>{month}</Typography></ToggleButton>
+					})}
+				</ToggleButtonGroup>}
 				{depositsData && <SankeyChart data={depositsData} style={{width: '100vh', height: '100vh'}}/> }
 			</header>
 		</div>
