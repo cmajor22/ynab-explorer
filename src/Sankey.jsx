@@ -8,13 +8,18 @@ const SankeyChart = ({ data }) => {
 
   useEffect(() => {
     const svg = d3.select(chartRef.current);
+    const hideValues = true;
+    const width = 500;
+    const height = 500;
+
     svg.selectAll('*').remove()
     svg
-      .attr("width", '60vw')
-      .attr("height", '100vh')
+      .attr("width", "100")
+      .attr("height", '100')
+      .attr('viewBox','0 0 '+Math.min(width,height)+' '+Math.min(width,height))
+      .attr('preserveAspectRatio','xMinYMin')
+      .append("g") ;
 
-    const width = 800;
-    const height = '700';
 
     const s = sankey()
       .nodeWidth(15)
@@ -40,7 +45,7 @@ const SankeyChart = ({ data }) => {
           return d.source.color;
         });
 
-    chartNodes.append("title").text((item) => `${item.source.name}: $${formatValue(item.value)} (${item.percentage}%)`)
+    chartNodes.append("title").text((item) => `${item.source.name}: $${!hideValues && formatValue(item.value)} (${item.percentage}%)`)
 
     svg.append('g')
       .selectAll('.node')
@@ -67,12 +72,11 @@ const SankeyChart = ({ data }) => {
       .attr("y", d => (d.y1 + d.y0) / 2)
       .attr("dy", "0.35em")
       .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
-      .text((item) => `${item.name}: $${formatValue(item.value)}`);
-
-  }, [data]);
+      .text((item) => `${item.name}: $${!hideValues && formatValue(item.value)}`);
+  })
 
   return (
-    <svg ref={chartRef}></svg>
+    <svg ref={chartRef} style={{width: "100%", height: "50%"}}></svg>
   );
 };
 
