@@ -2,20 +2,21 @@ import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
 
-const SankeyChart = ({ data }) => {
+const SankeyChart = ({ data }, titleFrom = 'source') => {
   const chartRef = useRef(null);
   const formatValue = (n) => {return Number(n).toLocaleString(undefined, {minimumFractionDigits: 2})}
+  const getTitle = (item) => {
+    return (titleFrom==='source') ?  item.source.name : item.target.name;
+  }
 
   useEffect(() => {
     const svg = d3.select(chartRef.current);
-    const hideValues = true;
-    const width = 500;
-    const height = 500;
+    const hideValues = false;
+    const width = 800;
+    const height = 800;
 
     svg.selectAll('*').remove()
     svg
-      .attr("width", "100")
-      .attr("height", '100')
       .attr('viewBox','0 0 '+Math.min(width,height)+' '+Math.min(width,height))
       .attr('preserveAspectRatio','xMinYMin')
       .append("g") ;
@@ -24,6 +25,7 @@ const SankeyChart = ({ data }) => {
     const s = sankey()
       .nodeWidth(15)
       .nodePadding(15)
+      .nodeSort(null)
       .size([width, height])
 
     const { nodes, links } = s(data);
@@ -37,7 +39,6 @@ const SankeyChart = ({ data }) => {
         .attr('stroke-width', d => Math.max(1, d.width))
         .style('fill', 'none')
         .style('stroke-opacity', .15)
-        // .style('stroke', '#FFF')
         .style('stroke', d => {
           if (d.target.color) {
             return d.target.color;
@@ -45,7 +46,7 @@ const SankeyChart = ({ data }) => {
           return d.source.color;
         });
 
-    chartNodes.append("title").text((item) => `${item.source.name}: $${!hideValues && formatValue(item.value)} (${item.percentage}%)`)
+    chartNodes.append("title").text((item) => `${getTitle(item)}: $${!hideValues && formatValue(item.value)} (${item.percentage}%)`)
 
     svg.append('g')
       .selectAll('.node')
@@ -76,7 +77,7 @@ const SankeyChart = ({ data }) => {
   })
 
   return (
-    <svg ref={chartRef} style={{width: "100%", height: "50%"}}></svg>
+    <svg ref={chartRef} style={{width: "100%", height: "100%"}}></svg>
   );
 };
 

@@ -1,9 +1,6 @@
-import logo from './logo.svg';
 import './App.css';
 import { useEffect, useState } from 'react';
-import { Box, FormControl, Grid, InputLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
-import * as d3 from 'd3';
-import { sankey } from 'd3-sankey';
+import { Box, Divider, FormControl, Grid, InputLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import SankeyChart from './Sankey';
 import _ from 'lodash';
 import moment from 'moment/moment';
@@ -49,6 +46,7 @@ function App() {
 	const [reportType, setReportType] = useState('All');
 	const [reportMonth, setReportMonth] = useState('All');
 	const [months, setMonths] = useState(['All']);
+	const [categories, setCategories] = useState([]);
 
 	const handleReportType = (event, newReportType) => {
 		if(newReportType===null) {
@@ -84,6 +82,10 @@ function App() {
 			setBaseTransactions(response.data.transactions);
 			setTransactions(JSON.parse(JSON.stringify(response.data.transactions)));
 			setYears(_.uniqBy(response.data.transactions, t => {return t.date.substring(0,4)}).map((y) => y.date));
+		});
+		ynabAPI.categories.getCategories(selectedBudget)
+		.then(response => {
+			setCategories(response.data.category_groups);
 		})
 	}, [selectedBudget]);
 
@@ -122,11 +124,9 @@ function App() {
 		})
 		setDepositsData({"nodes": dn, "links": dl});
 
-		// Setting up Withdrawl Data
-		let withdrawlGroups = _.groupBy(grouped.withdrawls, 'payee_name');
-		delete withdrawlGroups['Manual Balance Adjustment'];
-		delete withdrawlGroups['Starting Balance'];
-		delete withdrawlGroups['Transfer : RBC - Chequing'];
+		// Setting up Withdrawl Data (No Groupings)
+		let withdrawlGroups = _.groupBy(grouped.withdrawls, 'category_name');
+		delete withdrawlGroups['Uncategorized'];
 		let totalWithdrawls = 0;
 		_.forOwn(withdrawlGroups, (element, name) => {
 			totalWithdrawls+=_.sumBy(element, 'amount');;
@@ -148,13 +148,93 @@ function App() {
 			wl.push({
 				"source": 0,
 				"target": wn.length-1,
-				"value": Number(element.total/1000),
-				"percentage": Number((element.total/totalWithdrawls)*100).toFixed(2)
+				"value": Number(element.total/1000*-1),
+				"percentage": Number((element.total*-1/totalWithdrawls*-1)*100).toFixed(2)
 			})
 		});
 		setWithdrawlsData({"nodes": wn, "links": wl});
 
-	}, [transactions])
+
+		
+
+		// Setting up Withdrawl Data (with groupings)
+		let withdrawlGroups2 = _.groupBy(grouped.withdrawls, 'category_name');
+		delete withdrawlGroups2['Uncategorized'];
+		let totalWithdrawls2 = 0;
+		_.forOwn(withdrawlGroups2, (element, name) => {
+			totalWithdrawls2+=_.sumBy(element, 'amount');;
+		});
+		let wn2 = [];
+		let wl2 = [];
+		
+		_.forOwn(withdrawlGroups2, (element, name) => {
+			element.total = _.sumBy(element, 'amount');
+			wn2.push({
+				"name": name,
+				"categoryId": element[0].category_id,
+				"parent_id": null,
+				"parent_name": null,
+				"amount": element.total,
+				"color": "#FF0000"
+			});
+			wl2.push({
+				"source": 0,
+				"target": wn2.length-1,
+				"value": Number(element.total/1000*-1),
+				"percentage": Number((element.total*-1/totalWithdrawls2*-1)*100).toFixed(2)
+			})
+		});
+		_.forEach(wn2, (element) => {
+			_.forOwn(categories, (cs, n) => {
+				_.forEach(cs.categories, (c) => {
+					if(c.id===element.categoryId) {
+						element.parent_id=cs.id;
+						element.parent_name=cs.name;
+					}
+				})
+			});
+		});
+		wn2 = _.sortBy(wn2, ['parent_name'])
+		let wn3 = _.groupBy(wn2, 'parent_name');
+		let nodeInfo = [];
+		let linkInfo = [];
+		nodeInfo.push({
+			"node": 0,
+			"name": 'Total Expenses',
+			"color": "#FF0000"
+		})
+		_.forOwn(wn3, (w, i) => {
+			w.total = _.sumBy(w, 'amount');
+			nodeInfo.push({
+				"node": nodeInfo.length,
+				"name": i,
+				"color": "#FF0000"
+			});
+			let parentNode = nodeInfo.length-1;
+			linkInfo.push({
+				"source": 0,
+				"target": parentNode,
+				"value": Number(w.total/1000*-1),
+				"percentage": Number((w.total*-1/totalWithdrawls2*-1)*100).toFixed(2)
+			})
+			_.forEach(w, (t) => {
+				nodeInfo.push({
+					"node": nodeInfo.length,
+					"name": t.name,
+					"color": "#FF0000"
+				});
+				linkInfo.push({
+					"source": parentNode,
+					"target": nodeInfo.length-1,
+					"value": Number(t.amount/1000*-1),
+					"percentage": Number((t.amount*-1/totalWithdrawls2*-1)*100).toFixed(2)
+				})
+			})
+		})
+
+		setWithdrawlsData({"nodes": nodeInfo, "links": linkInfo});
+
+	}, [transactions, categories])
 
 	useEffect(() => {
 		if(reportType==="All"){
@@ -175,7 +255,7 @@ function App() {
 				}));
 			}
 		}
-	}, [reportType, reportMonth]);
+	}, [reportType, reportMonth, baseTransactions]);
 	
 	return (
 		<ThemeProvider theme={darkTheme}>
@@ -200,6 +280,16 @@ function App() {
 						</FormControl>
 					</Grid>
 					<Grid item xs={9} display='flex' justifyContent='flex-end'>
+						{reportType !== 'All' && reportType !== 'Custom' && [<ToggleButtonGroup
+							value={reportMonth}
+							exclusive
+							onChange={handleReportMonth}
+							>
+							{months.map((month) => {
+								return <ToggleButton key={month} value={month}><Typography>{month.substring(0,3)}</Typography></ToggleButton>
+							})}
+						</ToggleButtonGroup>,
+        				<Divider orientation="vertical" variant="middle" flexItem style={{marginLeft: '5px', marginRight: '5px'}} />]}
 						<ToggleButtonGroup
 							value={reportType}
 							exclusive
@@ -211,20 +301,29 @@ function App() {
 							<ToggleButton value="All"><Typography>All</Typography></ToggleButton>
 						</ToggleButtonGroup>
 					</Grid>
-					<Grid item xs={12} display='flex' justifyContent='flex-end'>
-						{reportType !== 'All' && reportType !== 'Custom' && <ToggleButtonGroup
-							value={reportMonth}
-							exclusive
-							onChange={handleReportMonth}
-							>
-							{months.map((month) => {
-								return <ToggleButton key={month} value={month}><Typography>{month.substring(0,3)}</Typography></ToggleButton>
-							})}
-						</ToggleButtonGroup>}
+					<Grid item xs={12}>
+						<br />
 					</Grid>
+					{/* Deposits */}
+					<Grid item xs={0} lg={0}></Grid>
+					<Grid item xs={12} lg={6}>
+						{depositsData?.nodes?.length>0 && <SankeyChart data={depositsData} titleFrom={'source'}/> }
+					</Grid>
+					<Grid item xs={0} lg={0}></Grid>
+					<br />
+					{/* Expenses (No Groupings)
+					<Grid item xs={0} lg={0}></Grid>
+					<Grid item xs={12} lg={6}>
+						{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} titleFrom={'destination'}/> }
+					</Grid>
+					<Grid item xs={0} lg={0}></Grid> */}
+					{/* Expenses (With Groupings) */}
+					<Grid item xs={0} lg={0}></Grid>
+					<Grid item xs={12} lg={6}>
+						{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} titleFrom={'destination'}/> }
+					</Grid>
+					<Grid item xs={0} lg={0}></Grid>
 				</Grid>
-				{depositsData?.nodes?.length>0 && <SankeyChart data={depositsData}/> }
-				{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} style={{width: '100%', height: '100%'}}/> }
 			</Box>
 		</ThemeProvider>
   );
