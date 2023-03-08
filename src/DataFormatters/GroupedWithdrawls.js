@@ -12,7 +12,7 @@ function GroupedWithdrawls(categories, transactions) {
     });
 
     // Set up base nodes
-    let baseNodes, baseLinks = [];
+    let baseNodes = [], baseLinks = [];
     _.forOwn(withdrawlGroups, (element, name) => {
         element.total = _.sumBy(element, 'amount');
         baseNodes.push({
@@ -45,7 +45,7 @@ function GroupedWithdrawls(categories, transactions) {
     
     // Create nodes for display
     let groupedNodes = _.groupBy(_.sortBy(baseNodes, ['parent_name']), 'parent_name');
-    let nodes, links = [];
+    let nodes = [], links = [];
     nodes.push({
         "node": 0,
         "name": 'Total Expenses',

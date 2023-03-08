@@ -1,6 +1,8 @@
 import _ from "lodash";
 
 function Withdrawls(transactions) {
+    let nodes = [], links = [];
+
     // Setting up Withdrawl Data (No Groupings)
     let withdrawlGroups = _.groupBy(transactions.withdrawls, 'category_name');
     delete withdrawlGroups['Uncategorized'];
@@ -12,7 +14,6 @@ function Withdrawls(transactions) {
     });
 
     // Create Nodes and Links
-    let nodes, links = [];
     nodes.push({
         "node": 0,
         "name": 'Total Expenses',
@@ -27,7 +28,7 @@ function Withdrawls(transactions) {
         });
         links.push({
             "source": 0,
-            "target": links.length-1,
+            "target": nodes.length-1,
             "value": Number(element.total/1000*-1),
             "percentage": Number((element.total*-1/totalWithdrawls*-1)*100).toFixed(2)
         })

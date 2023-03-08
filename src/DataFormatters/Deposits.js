@@ -14,7 +14,7 @@ function Deposits(transactions) {
     });
 
     // Set up nodes and links
-    let nodes, links = [];
+    let nodes = [], links = [];
     _.forOwn(depositGroups, (element, name) => {
         element.total = _.sumBy(element, 'amount');
         nodes.push({

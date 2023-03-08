@@ -35,7 +35,7 @@ const classes = {
 }
 
 const ynab = require("ynab");
-const accessToken = "GntwW-Ma2SzGrk1bNs58aSZccTOXj8M1-M0KxQcmRRM";
+const accessToken = "02gk1ZhSoJsaPnIeaGmPrK4WUpCzgQfIzISP1TjpgaE";
 const ynabAPI = new ynab.API(accessToken);
 
 function App() {
@@ -80,11 +80,28 @@ function App() {
 	}, [budgets])
 
 	useEffect(() => {
+		if(selectedBudget==='') {
+			return;
+		}
 		ynabAPI.transactions.getTransactions(selectedBudget)
 		.then(response => {
-			setBaseTransactions(response.data.transactions);
-			setTransactions(JSON.parse(JSON.stringify(response.data.transactions)));
-			setYears(_.uniqBy(response.data.transactions, t => {return t.date.substring(0,4)}).map((y) => y.date));
+			let newTrans = [];
+			response.data.transactions.forEach((t) => {
+				if(t.subtransactions.length!==0) {
+					t.subtransactions.forEach((s) => {
+						let newT = JSON.parse(JSON.stringify(t));
+						newT.category_name=s.category_name;
+						newT.category_id=s.category_id;
+						newT.amount=s.amount;
+						newTrans.push(newT);
+					});
+				}
+				newTrans.push(t);
+			})
+			newTrans = JSON.parse(JSON.stringify(newTrans));
+			setBaseTransactions(newTrans);
+			setTransactions(JSON.parse(JSON.stringify(newTrans)));
+			setYears(_.uniqBy(newTrans, t => {return t.date.substring(0,4)}).map((y) => y.date));
 		});
 		ynabAPI.categories.getCategories(selectedBudget)
 		.then(response => {
@@ -98,8 +115,8 @@ function App() {
 		const deposits = Deposits(grouped);
 		setDepositsData(deposits);
 
-		const withdrawls = Withdrawls(grouped);
-		setWithdrawlsData(withdrawls);
+		// const withdrawls = Withdrawls(grouped);
+		// setWithdrawlsData(withdrawls);
 
 		const groupedWithdrawls = GroupedWithdrawls(categories, grouped);
 		setWithdrawlsData(groupedWithdrawls);
@@ -144,7 +161,7 @@ function App() {
 								style={{width: '300px'}}
 							>
 								{budgets.map((budget) => {
-									return <MenuItem value={budget.id}>{budget.name}</MenuItem>
+									return <MenuItem key={budget.id} value={budget.id}>{budget.name}</MenuItem>
 								})}
 							</Select>
 						</FormControl>
