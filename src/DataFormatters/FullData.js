@@ -8,6 +8,9 @@ function FullData(categories, grouped) {
     }
     const deposits = Deposits(grouped);
     const withdrawls = GroupedWithdrawls(categories, grouped);
+    _.forEach(deposits.links, (d) => {
+        d.titleFrom='source';
+    })
 
     let nodes = deposits.nodes, links = deposits.links;
     const totalDeposits = _.sumBy(deposits.links, 'value');
@@ -24,7 +27,8 @@ function FullData(categories, grouped) {
             "source": nodes.length-2,
             "target": nodes.length-1,
             "value": Number(totalDeposits-totalWithdrawls),
-            "percentage": Number(((totalDeposits-totalWithdrawls)/totalDeposits)*100).toFixed(2)
+            "percentage": Number(((totalDeposits-totalWithdrawls)/totalDeposits)*100).toFixed(2),
+            "titleFrom": 'target'
         });
     }else if(totalWithdrawls>totalDeposits){
         // Go to Deficit
@@ -37,7 +41,8 @@ function FullData(categories, grouped) {
             "source": nodes.length-2,
             "target": nodes.length-1,
             "value": Number(totalWithdrawls-totalDeposits),
-            "percentage": Number(((totalWithdrawls-totalDeposits)/totalDeposits)*100).toFixed(2)
+            "percentage": Number(((totalWithdrawls-totalDeposits)/totalDeposits)*100).toFixed(2),
+            "titleFrom": 'target'
         });
     }else{
         // Balanced
@@ -48,31 +53,21 @@ function FullData(categories, grouped) {
             "source": nLength-2,
             "target": nLength,
             "value": totalWithdrawls,
-            "percentage": Number((totalWithdrawls/totalDeposits)*100).toFixed(2)
+            "percentage": Number((totalWithdrawls/totalDeposits)*100).toFixed(2),
+            "titleFrom": 'target'
         })
     }
-    console.log('links')
-    console.log(links)
     _.forEach(withdrawls.nodes, (w) => {
         w.node = nodes.length;
-        console.log(w)
         nodes.push(w);
     })
     _.forEach(withdrawls.links, (w) => {
         w.source += nLength;
         w.target += nLength;
+        w.titleFrom = 'target';
         links.push(w);
     })
 
-    console.log(totalDeposits, totalWithdrawls)
-
-    // _.forEach(withdrawls.nodes, (n) => {
-    //     let newN = n;
-    //     newN.node=nodes.length;
-    //     nodes.push(n);
-    // })
-
-    console.log(nodes, links)
     return { nodes, links };
 }
 

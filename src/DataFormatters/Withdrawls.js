@@ -30,7 +30,8 @@ function Withdrawls(transactions) {
             "source": 0,
             "target": nodes.length-1,
             "value": Number(element.total/1000*-1),
-            "percentage": Number((element.total*-1/totalWithdrawls*-1)*100).toFixed(2)
+            "percentage": Number((element.total*-1/totalWithdrawls*-1)*100).toFixed(2),
+            "titleFrom": 'target'
         })
     });
 

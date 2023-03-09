@@ -2,11 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
 
-const SankeyChart = ({ data }, titleFrom = 'source') => {
+const SankeyChart = ({ data }) => {
   const chartRef = useRef(null);
   const formatValue = (n) => {return Number(n).toLocaleString(undefined, {minimumFractionDigits: 2})}
   const getTitle = (item) => {
-    return (titleFrom==='source') ?  item.source.name : item.target.name;
+    return (item.titleFrom === 'source') ? item.source.name : item.target.name;
   }
 
   useEffect(() => {
@@ -44,9 +44,20 @@ const SankeyChart = ({ data }, titleFrom = 'source') => {
             return d.target.color;
           }
           return d.source.color;
-        });
+        })
+        .on('mouseover', function (d, i) {
+          d3.select(this).transition()
+            .duration('50')
+            .style('stroke-opacity', .25)
+        })
+        .on('mouseout', function (d, i) {
+          d3.select(this).transition()
+            .duration('50')
+            .style('stroke-opacity', .15)
+        })
 
-    chartNodes.append("title").text((item) => `${getTitle(item)}: $${!hideValues && formatValue(item.value)} (${item.percentage}%)`)
+    chartNodes.append("title")
+      .text((item) => `${getTitle(item)}: $${!hideValues && formatValue(item.value)} (${item.percentage}%)`)
 
     svg.append('g')
       .selectAll('.node')

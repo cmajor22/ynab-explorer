@@ -26,7 +26,8 @@ function Deposits(transactions) {
             "source": nodes.length-1,
             "target": Object.keys(depositGroups).length,
             "value": Number(element.total/1000),
-            "percentage": Number((element.total/totalDeposits)*100).toFixed(2)
+            "percentage": Number((element.total/totalDeposits)*100).toFixed(2),
+            "titleFrom": 'source'
         })
     });
     nodes.push({

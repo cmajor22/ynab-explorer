@@ -207,13 +207,13 @@ function App() {
 					{/* Expenses (With Groupings) 
 					<Grid item xs={0} lg={0}></Grid>
 					<Grid item xs={12} lg={6}>
-						{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} titleFrom={'destination'}/> }
+						{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} titleFrom={'target'}/> }
 					</Grid>
 					<Grid item xs={0} lg={0}></Grid>*/}
 					{/* Expenses (With Groupings) */}
 					<Grid item xs={0} lg={0}></Grid>
 					<Grid item xs={12} lg={12}>
-						{bothData?.nodes?.length>0 && <SankeyChart data={bothData} titleFrom={'destination'}/> }
+						{bothData?.nodes?.length>0 && <SankeyChart data={bothData} titleFrom={"mixed"} d={"afdaf"}/> }
 					</Grid>
 					<Grid item xs={0} lg={0}></Grid>
 				</Grid>

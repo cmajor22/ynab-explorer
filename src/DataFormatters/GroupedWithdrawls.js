@@ -27,7 +27,8 @@ function GroupedWithdrawls(categories, transactions) {
             "source": 0,
             "target": baseNodes.length-1,
             "value": Number(element.total/1000*-1),
-            "percentage": Number((element.total*-1/totalWithdrawls*-1)*100).toFixed(2)
+            "percentage": Number((element.total*-1/totalWithdrawls*-1)*100).toFixed(2),
+            "titleFrom": 'target'
         })
     });
 
@@ -64,7 +65,8 @@ function GroupedWithdrawls(categories, transactions) {
             "source": 0,
             "target": parentNode,
             "value": Number(group.total/1000*-1),
-            "percentage": Number((group.total*-1/totalWithdrawls*-1)*100).toFixed(2)
+            "percentage": Number((group.total*-1/totalWithdrawls*-1)*100).toFixed(2),
+            "titleFrom": 'target'
         })
         // For each group, create sub categories
         _.forEach(group, (transaction) => {
@@ -77,7 +79,8 @@ function GroupedWithdrawls(categories, transactions) {
                 "source": parentNode,
                 "target": nodes.length-1,
                 "value": Number(transaction.amount/1000*-1),
-                "percentage": Number((transaction.amount*-1/totalWithdrawls*-1)*100).toFixed(2)
+                "percentage": Number((transaction.amount*-1/totalWithdrawls*-1)*100).toFixed(2),
+                "titleFrom": 'target'
             })
         })
     })
