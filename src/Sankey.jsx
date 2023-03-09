@@ -64,7 +64,7 @@ const SankeyChart = ({ data }, titleFrom = 'source') => {
 
     svg.append("g")
       .attr("font-family", 'roboto')
-      .attr("font-size", 16)
+      .attr("font-size", 12)
       .attr('fill', '#e1e1e1')
       .selectAll("text")
       .data(nodes)

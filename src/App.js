@@ -9,6 +9,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Withdrawls from './DataFormatters/Withdrawls';
 import GroupedWithdrawls from './DataFormatters/GroupedWithdrawls';
 import Deposits from './DataFormatters/Deposits';
+import FullData from './DataFormatters/FullData';
 
 const darkTheme = createTheme({
   palette: {
@@ -50,6 +51,7 @@ function App() {
 	const [reportMonth, setReportMonth] = useState('All');
 	const [months, setMonths] = useState(['All']);
 	const [categories, setCategories] = useState([]);
+	const [bothData, setBothData] = useState([]);
 
 	const handleReportType = (event, newReportType) => {
 		if(newReportType===null) {
@@ -95,8 +97,9 @@ function App() {
 						newT.amount=s.amount;
 						newTrans.push(newT);
 					});
+				}else{
+					newTrans.push(t);
 				}
-				newTrans.push(t);
 			})
 			newTrans = JSON.parse(JSON.stringify(newTrans));
 			setBaseTransactions(newTrans);
@@ -120,6 +123,9 @@ function App() {
 
 		const groupedWithdrawls = GroupedWithdrawls(categories, grouped);
 		setWithdrawlsData(groupedWithdrawls);
+
+		const fullData = FullData(categories, grouped);
+		setBothData(fullData);
 
 	}, [transactions, categories])
 
@@ -191,17 +197,23 @@ function App() {
 					<Grid item xs={12}>
 						<br />
 					</Grid>
-					{/* Deposits */}
+					{/* Deposits 
 					<Grid item xs={0} lg={0}></Grid>
 					<Grid item xs={12} lg={6}>
 						{depositsData?.nodes?.length>0 && <SankeyChart data={depositsData} titleFrom={'source'}/> }
 					</Grid>
 					<Grid item xs={0} lg={0}></Grid>
-					<br />
-					{/* Expenses (With Groupings) */}
+					<br />*/}
+					{/* Expenses (With Groupings) 
 					<Grid item xs={0} lg={0}></Grid>
 					<Grid item xs={12} lg={6}>
 						{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} titleFrom={'destination'}/> }
+					</Grid>
+					<Grid item xs={0} lg={0}></Grid>*/}
+					{/* Expenses (With Groupings) */}
+					<Grid item xs={0} lg={0}></Grid>
+					<Grid item xs={12} lg={12}>
+						{bothData?.nodes?.length>0 && <SankeyChart data={bothData} titleFrom={'destination'}/> }
 					</Grid>
 					<Grid item xs={0} lg={0}></Grid>
 				</Grid>
