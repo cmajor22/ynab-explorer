@@ -19,8 +19,7 @@ const SankeyChart = ({ data }) => {
     svg
       .attr('viewBox','0 0 '+Math.min(width,height)+' '+Math.min(width,height))
       .attr('preserveAspectRatio','xMinYMin')
-      .append("g") ;
-
+      .append("g");
 
     const s = sankey()
       .nodeWidth(15)
@@ -46,14 +45,30 @@ const SankeyChart = ({ data }) => {
           return d.source.color;
         })
         .on('mouseover', function (d, i) {
+          d3.selectAll('.link')
+            .transition()
+            .duration('500')
+            .style('stroke-opacity', .05)
           d3.select(this).transition()
-            .duration('50')
+            .duration('100')
             .style('stroke-opacity', .25)
+          d3.selectAll('text')
+            .transition()
+            .duration('500')
+            .attr('opacity', .5)
         })
         .on('mouseout', function (d, i) {
-          d3.select(this).transition()
-            .duration('50')
+          d3.selectAll('.link')
+            .transition()
+            .duration('500')
             .style('stroke-opacity', .15)
+          d3.select(this).transition()
+            .duration('100')
+            .style('stroke-opacity', .15)
+          d3.selectAll('text')
+            .transition()
+            .duration('500')
+            .attr('opacity', 1)
         })
 
     chartNodes.append("title")
