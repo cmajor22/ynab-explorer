@@ -45,6 +45,10 @@ const SankeyChart = ({ data }) => {
           return d.source.color;
         })
         .on('mouseover', function (d, i) {
+          d3.selectAll('text')
+            .transition()
+            .duration('1')
+            .attr('opacity', 1)
           d3.selectAll('.link')
             .transition()
             .duration('500')
@@ -55,7 +59,14 @@ const SankeyChart = ({ data }) => {
           d3.selectAll('text')
             .transition()
             .duration('500')
-            .attr('opacity', .5)
+            .attr('opacity', .1)
+            console.log(d.srcElement.__data__)
+          d3.selectAll('text').filter((item) => {
+            return item.name===d.srcElement.__data__.source.name || item.name===d.srcElement.__data__.target.name
+          })
+            .transition()
+            .duration('501')
+            .attr('opacity', 1)
         })
         .on('mouseout', function (d, i) {
           d3.selectAll('.link')
@@ -92,6 +103,7 @@ const SankeyChart = ({ data }) => {
       .attr("font-family", 'roboto')
       .attr("font-size", 12)
       .attr('fill', '#e1e1e1')
+      .attr('opacity', 1)
       .selectAll("text")
       .data(nodes)
       .join("text")

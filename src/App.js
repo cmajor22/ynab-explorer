@@ -1,12 +1,11 @@
 import './App.css';
 import { useEffect, useState } from 'react';
-import { Box, Divider, FormControl, Grid, InputLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Box, FormControl, Grid, InputLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import SankeyChart from './Sankey';
 import _ from 'lodash';
 import moment from 'moment/moment';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import Withdrawls from './DataFormatters/Withdrawls';
 import GroupedWithdrawls from './DataFormatters/GroupedWithdrawls';
 import Deposits from './DataFormatters/Deposits';
 import FullData from './DataFormatters/FullData';
@@ -48,16 +47,27 @@ function App() {
 	const [withdrawlsData, setWithdrawlsData] = useState(null);
 	const [years, setYears] = useState([]);
 	const [reportType, setReportType] = useState('All');
+	const [reportYear, setReportYear] = useState('All');
 	const [reportMonth, setReportMonth] = useState('All');
 	const [months, setMonths] = useState(['All']);
 	const [categories, setCategories] = useState([]);
 	const [bothData, setBothData] = useState([]);
+	const [bothVisible, setBothVisible] = useState(true);
+	const [incomeVisible, setIncomeVisible] = useState(true);
+	const [expensesVisible, setExpensesVisible] = useState(true);
 
 	const handleReportType = (event, newReportType) => {
 		if(newReportType===null) {
 			return;
 		}
 		setReportType(newReportType);
+	}
+	
+	const handleReportYear = (event, newReportYear) => {
+		if(newReportYear===null) {
+			return;
+		}
+		setReportYear(newReportYear);
 		setReportMonth("All");
 	}
 	
@@ -118,9 +128,6 @@ function App() {
 		const deposits = Deposits(grouped);
 		setDepositsData(deposits);
 
-		// const withdrawls = Withdrawls(grouped);
-		// setWithdrawlsData(withdrawls);
-
 		const groupedWithdrawls = GroupedWithdrawls(categories, grouped);
 		setWithdrawlsData(groupedWithdrawls);
 
@@ -130,10 +137,10 @@ function App() {
 	}, [transactions, categories])
 
 	useEffect(() => {
-		if(reportType==="All"){
+		if(reportYear==="All"){
 			setTransactions(JSON.parse(JSON.stringify(baseTransactions)));
 		}else{
-			let m = _.uniqBy(_.filter(baseTransactions, t => { return t.date.substring(0,4)===reportType}), t => {
+			let m = _.uniqBy(_.filter(baseTransactions, t => { return t.date.substring(0,4)===reportYear}), t => {
 				return moment(t.date).format('MMMM');
 			}).map((m) => {
 				return moment(m.date).format('MMMM');
@@ -141,14 +148,30 @@ function App() {
 			m.push("All");
 			setMonths(m);
 			if(reportMonth==="All") {
-				setTransactions(_.filter(baseTransactions, t => { return t.date.substring(0,4)===reportType}));
+				setTransactions(_.filter(baseTransactions, t => { return t.date.substring(0,4)===reportYear}));
 			}else{
 				setTransactions(_.filter(baseTransactions, t => {
-					return moment(t.date).format('YYYY')===reportType && moment(t.date).format('MMMM')===reportMonth;
+					return moment(t.date).format('YYYY')===reportYear && moment(t.date).format('MMMM')===reportMonth;
 				}));
 			}
 		}
-	}, [reportType, reportMonth, baseTransactions]);
+	}, [reportYear, reportMonth, baseTransactions]);
+
+	useEffect(() => {
+		if(reportType==='All') {
+			setBothVisible(true);
+			setIncomeVisible(false);
+			setExpensesVisible(false);
+		}else if(reportType==='Income'){
+			setBothVisible(false);
+			setIncomeVisible(true);
+			setExpensesVisible(false);
+		}else if(reportType==='Expenses'){
+			setBothVisible(false);
+			setIncomeVisible(false);
+			setExpensesVisible(true);
+		}
+	}, [reportType]);
 	
 	return (
 		<ThemeProvider theme={darkTheme}>
@@ -173,20 +196,10 @@ function App() {
 						</FormControl>
 					</Grid>
 					<Grid item xs={9} display='flex' justifyContent='flex-end'>
-						{reportType !== 'All' && reportType !== 'Custom' && [<ToggleButtonGroup
-							value={reportMonth}
-							exclusive
-							onChange={handleReportMonth}
-							>
-							{months.map((month) => {
-								return <ToggleButton key={month} value={month}><Typography>{month.substring(0,3)}</Typography></ToggleButton>
-							})}
-						</ToggleButtonGroup>,
-        				<Divider orientation="vertical" variant="middle" flexItem style={{marginLeft: '5px', marginRight: '5px'}} />]}
 						<ToggleButtonGroup
-							value={reportType}
+							value={reportYear}
 							exclusive
-							onChange={handleReportType}
+							onChange={handleReportYear}
 							>
 							{years.map((year) => {
 								return <ToggleButton key={year.substring(0,4)} value={year.substring(0,4)}><Typography>{year.substring(0,4)}</Typography></ToggleButton>
@@ -194,28 +207,58 @@ function App() {
 							<ToggleButton value="All"><Typography>All</Typography></ToggleButton>
 						</ToggleButtonGroup>
 					</Grid>
+					<Grid item xs={3}>
+						<ToggleButtonGroup
+							value={reportType}
+							exclusive
+							onChange={handleReportType}
+							>
+							<ToggleButton key={'Income'} value={'Income'}><Typography>Income</Typography></ToggleButton>
+							<ToggleButton key={'Expenses'} value={'Expenses'}><Typography>Expenses</Typography></ToggleButton>
+							<ToggleButton key={'All'} value={'All'}><Typography>All</Typography></ToggleButton>
+						</ToggleButtonGroup>
+					</Grid>
+					<Grid item xs={9} display='flex' justifyContent='flex-end'>
+						{reportYear !== 'All' && reportYear !== 'Custom' && <ToggleButtonGroup
+							value={reportMonth}
+							exclusive
+							onChange={handleReportMonth}
+							>
+							{months.map((month) => {
+								return <ToggleButton key={month} value={month}><Typography>{month.substring(0,3)}</Typography></ToggleButton>
+							})}
+						</ToggleButtonGroup>}
+					</Grid>
 					<Grid item xs={12}>
 						<br />
 					</Grid>
-					{/* Deposits 
-					<Grid item xs={0} lg={0}></Grid>
-					<Grid item xs={12} lg={6}>
-						{depositsData?.nodes?.length>0 && <SankeyChart data={depositsData} titleFrom={'source'}/> }
-					</Grid>
-					<Grid item xs={0} lg={0}></Grid>
-					<br />*/}
-					{/* Expenses (With Groupings) 
-					<Grid item xs={0} lg={0}></Grid>
-					<Grid item xs={12} lg={6}>
-						{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} titleFrom={'target'}/> }
-					</Grid>
-					<Grid item xs={0} lg={0}></Grid>*/}
+					{/* Deposits */}
+					{ incomeVisible ? [
+						<Grid item xs={0} lg={0}></Grid>,
+						<Grid item xs={12} lg={6}>
+							{depositsData?.nodes?.length>0 && <SankeyChart data={depositsData} titleFrom={'source'}/> }
+						</Grid>,
+						<Grid item xs={0} lg={0}></Grid>,
+						<br />
+					] : null }
 					{/* Expenses (With Groupings) */}
-					<Grid item xs={0} lg={0}></Grid>
-					<Grid item xs={12} lg={12}>
-						{bothData?.nodes?.length>0 && <SankeyChart data={bothData} titleFrom={"mixed"} d={"afdaf"}/> }
-					</Grid>
-					<Grid item xs={0} lg={0}></Grid>
+					{ expensesVisible ? [
+						<Grid item xs={0} lg={0}></Grid>,
+						<Grid item xs={12} lg={6}>
+							{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} titleFrom={'target'}/> }
+						</Grid>,
+						<Grid item xs={0} lg={0}></Grid>,
+						<br />
+					]: null }
+					{/* Expenses (With Groupings) */}
+					{ bothVisible ? [
+						<Grid item xs={0} lg={0}></Grid>,
+						<Grid item xs={12} lg={12}>,
+							{bothData?.nodes?.length>0 && <SankeyChart data={bothData} titleFrom={"mixed"}/> }
+						</Grid>,
+						<Grid item xs={0} lg={0}></Grid>,
+						<br />
+					] : null }
 				</Grid>
 			</Box>
 		</ThemeProvider>
