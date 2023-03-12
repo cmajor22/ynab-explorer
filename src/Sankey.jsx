@@ -60,7 +60,6 @@ const SankeyChart = ({ data }) => {
             .transition()
             .duration('500')
             .attr('opacity', .1)
-            console.log(d.srcElement.__data__)
           d3.selectAll('text').filter((item) => {
             return item.name===d.srcElement.__data__.source.name || item.name===d.srcElement.__data__.target.name
           })
@@ -112,6 +111,15 @@ const SankeyChart = ({ data }) => {
       .attr("dy", "0.35em")
       .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
       .text((item) => `${item.name}: $${!hideValues && formatValue(item.value)}`);
+
+    svg.selectAll(".link")
+      .attr('d', 0)
+      .attr('stroke-width', 0)
+      .transition()
+      .delay((d, i) => i*10)
+      .duration(500)
+      .attr('d', sankeyLinkHorizontal())
+      .attr('stroke-width', d => Math.max(1, d.width))
   })
 
   return (

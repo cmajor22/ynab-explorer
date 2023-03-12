@@ -35,8 +35,9 @@ const classes = {
 }
 
 const ynab = require("ynab");
-const accessToken = "02gk1ZhSoJsaPnIeaGmPrK4WUpCzgQfIzISP1TjpgaE";
-const ynabAPI = new ynab.API(accessToken);
+const clientId = 'Stnp__Fp_17fgQlqYmnk5n7NKCOvrz45YSEXqTxrbSE';
+const redirect = 'http://localhost:3000';
+const auth = `https://api.youneedabudget.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirect}&response_type=token`;
 
 function App() {
 	const [budgets, setBudgets] = useState([]);
@@ -55,6 +56,8 @@ function App() {
 	const [bothVisible, setBothVisible] = useState(true);
 	const [incomeVisible, setIncomeVisible] = useState(true);
 	const [expensesVisible, setExpensesVisible] = useState(true);
+	const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken')??'');
+	const [ynabAPI, setYnabAPI] = useState(null);
 
 	const handleReportType = (event, newReportType) => {
 		if(newReportType===null) {
@@ -79,11 +82,34 @@ function App() {
 	}
 
 	useEffect(() => {
+		let params= {};
+		window.location.hash.substring(1).split('&').forEach((p) => {
+			params[p.split('=')[0]] = p.split('=')[1];
+		});
+		if(accessToken==='') {
+			if(params.access_token===undefined){
+				window.location = auth;
+			}else{
+				localStorage.setItem('accessToken', params.access_token);
+				setAccessToken(params.access_token);
+			}
+		}
+	}, [accessToken]);
+
+	useEffect(() => {
+		let y = new ynab.API(accessToken);
+		setYnabAPI(y);
+	},[accessToken])
+
+	useEffect(() => {
+		if(ynabAPI===null) {
+			return;
+		}
 		ynabAPI.budgets.getBudgets()
 		.then(response => {
 			setBudgets(response.data.budgets);
 		});
-	}, []);
+	}, [ynabAPI])
 
 	useEffect(()=>{
 		if(budgets.length===1) {
@@ -120,7 +146,7 @@ function App() {
 		.then(response => {
 			setCategories(response.data.category_groups);
 		})
-	}, [selectedBudget]);
+	}, [selectedBudget, ynabAPI]);
 
 	useEffect(() => {
 		const grouped = _.groupBy(transactions, t => { return t.amount < 0 ? 'withdrawls' : 'deposits'});
@@ -253,7 +279,7 @@ function App() {
 					{/* Expenses (With Groupings) */}
 					{ bothVisible ? [
 						<Grid item xs={0} lg={0}></Grid>,
-						<Grid item xs={12} lg={12}>,
+						<Grid item xs={12} lg={12}>
 							{bothData?.nodes?.length>0 && <SankeyChart data={bothData} titleFrom={"mixed"}/> }
 						</Grid>,
 						<Grid item xs={0} lg={0}></Grid>,
