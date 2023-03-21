@@ -82,7 +82,7 @@ const SankeyChart = ({ data }) => {
         })
 
     chartNodes.append("title")
-      .text((item) => `${getTitle(item)}: $${!hideValues && formatValue(item.value)} (${item.percentage}%)`)
+      .text((item) => `${getTitle(item)}${!hideValues ? `: $${formatValue(item.value)} (${item.percentage}%)` : ''}`)
 
     svg.append('g')
       .selectAll('.node')
@@ -110,15 +110,13 @@ const SankeyChart = ({ data }) => {
       .attr("y", d => (d.y1 + d.y0) / 2)
       .attr("dy", "0.35em")
       .attr("text-anchor", d => d.x0 < width / 2 ? "start" : "end")
-      .text((item) => `${item.name}: $${!hideValues && formatValue(item.value)}`);
+      .text((item) => `${item.name}${!hideValues ? `: $${formatValue(item.value)}` : ''}`);
 
     svg.selectAll(".link")
-      .attr('d', 0)
       .attr('stroke-width', 0)
       .transition()
-      .delay((d, i) => i*10)
+      .delay((d, i) => i*5)
       .duration(500)
-      .attr('d', sankeyLinkHorizontal())
       .attr('stroke-width', d => Math.max(1, d.width))
   })
 

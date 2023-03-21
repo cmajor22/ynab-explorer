@@ -37,7 +37,7 @@ const classes = {
 const ynab = require("ynab");
 const clientId = 'Stnp__Fp_17fgQlqYmnk5n7NKCOvrz45YSEXqTxrbSE';
 const redirect = 'http://localhost:3000';
-const auth = `https://api.youneedabudget.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirect}&response_type=token`;
+const auth = `https://api.youneedabudget.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirect}&response_type=token&scope=read-only`;
 
 function App() {
 	const [budgets, setBudgets] = useState([]);
@@ -57,6 +57,7 @@ function App() {
 	const [incomeVisible, setIncomeVisible] = useState(true);
 	const [expensesVisible, setExpensesVisible] = useState(true);
 	const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken')??'');
+	const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken')??'');
 	const [ynabAPI, setYnabAPI] = useState(null);
 
 	const handleReportType = (event, newReportType) => {
@@ -83,6 +84,7 @@ function App() {
 
 	useEffect(() => {
 		let params= {};
+
 		window.location.hash.substring(1).split('&').forEach((p) => {
 			params[p.split('=')[0]] = p.split('=')[1];
 		});
@@ -91,14 +93,17 @@ function App() {
 				window.location = auth;
 			}else{
 				localStorage.setItem('accessToken', params.access_token);
+				localStorage.setItem('refreshToken', params.refresh_token);
 				setAccessToken(params.access_token);
 			}
 		}
 	}, [accessToken]);
 
 	useEffect(() => {
-		let y = new ynab.API(accessToken);
-		setYnabAPI(y);
+		if(accessToken!=='') {
+			let y = new ynab.API(accessToken);
+			setYnabAPI(y);
+		}
 	},[accessToken])
 
 	useEffect(() => {
@@ -108,6 +113,13 @@ function App() {
 		ynabAPI.budgets.getBudgets()
 		.then(response => {
 			setBudgets(response.data.budgets);
+		})
+		.catch(err => {
+			if(err.error.id==='401') {
+				localStorage.setItem('accessToken', '');
+				localStorage.setItem('refreshToken', '');
+				window.location = auth;
+			}
 		});
 	}, [ynabAPI])
 
