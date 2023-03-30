@@ -46,7 +46,7 @@ const SankeyChart = ({ data }) => {
         })
         .on('mouseover', function (d, i) {
           d3.selectAll('text')
-            .transition('textOtherOpacity')
+            .transition()
             .duration('1')
             .attr('opacity', 1)
           d3.selectAll('.link')
@@ -78,7 +78,7 @@ const SankeyChart = ({ data }) => {
             .duration('100')
             .style('stroke-opacity', .15)
           d3.selectAll('text')
-            .transition('textFullOpacity')
+            .transition()
             .duration('500')
             .attr('opacity', 1)
         })
