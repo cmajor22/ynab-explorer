@@ -36,7 +36,8 @@ const classes = {
 
 const ynab = require("ynab");
 const clientId = 'Stnp__Fp_17fgQlqYmnk5n7NKCOvrz45YSEXqTxrbSE';
-const redirect = 'http://localhost:3000';
+const redirect = 'https://ynabexplorer.com';
+// const redirect = 'http://localhost:3000';
 const auth = `https://api.youneedabudget.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirect}&response_type=token&scope=read-only`;
 
 function App() {
