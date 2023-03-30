@@ -13,17 +13,17 @@ const SankeyChart = ({ data }) => {
     const svg = d3.select(chartRef.current);
     const hideValues = false;
     const width = 800;
-    const height = 800;
+    const height = 700;
 
     svg.selectAll('*').remove()
     svg
-      .attr('viewBox','0 0 '+Math.min(width,height)+' '+Math.min(width,height))
+      .attr('viewBox','0 0 '+width+' '+height)
       .attr('preserveAspectRatio','xMinYMin')
       .append("g");
 
     const s = sankey()
       .nodeWidth(15)
-      .nodePadding(15)
+      .nodePadding(10)
       .nodeSort(null)
       .size([width, height])
 
@@ -46,14 +46,15 @@ const SankeyChart = ({ data }) => {
         })
         .on('mouseover', function (d, i) {
           d3.selectAll('text')
-            .transition()
+            .transition('textOtherOpacity')
             .duration('1')
             .attr('opacity', 1)
           d3.selectAll('.link')
             .transition()
             .duration('500')
             .style('stroke-opacity', .05)
-          d3.select(this).transition()
+          d3.select(this)
+            .transition()
             .duration('100')
             .style('stroke-opacity', .25)
           d3.selectAll('text')
@@ -72,11 +73,12 @@ const SankeyChart = ({ data }) => {
             .transition()
             .duration('500')
             .style('stroke-opacity', .15)
-          d3.select(this).transition()
+          d3.select(this)
+            .transition()
             .duration('100')
             .style('stroke-opacity', .15)
           d3.selectAll('text')
-            .transition()
+            .transition('textFullOpacity')
             .duration('500')
             .attr('opacity', 1)
         })
@@ -93,14 +95,14 @@ const SankeyChart = ({ data }) => {
         .attr('y', d => d.y0)
         .attr('height', d => d.y1 - d.y0)
         .attr('width', d => d.x1 - d.x0)
-        .attr('marginBottom', 5)
+        .attr('marginBottom', 2)
         .style('fill', d => d.color)
         .style('fill-opacity', 0.5)
         .style('marginLeft', '20px')
 
     svg.append("g")
       .attr("font-family", 'roboto')
-      .attr("font-size", 12)
+      .attr("font-size", 10)
       .attr('fill', '#e1e1e1')
       .attr('opacity', 1)
       .selectAll("text")
@@ -114,7 +116,7 @@ const SankeyChart = ({ data }) => {
 
     svg.selectAll(".link")
       .attr('stroke-width', 0)
-      .transition()
+      .transition('fullTransition')
       .delay((d, i) => i*5)
       .duration(500)
       .attr('stroke-width', d => Math.max(1, d.width))

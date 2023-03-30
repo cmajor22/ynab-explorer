@@ -2,7 +2,14 @@ import _ from "lodash";
 
 function GroupedWithdrawls(categories, transactions) {
     // Setting up Withdrawl Data (with groupings)
-    let withdrawlGroups = _.groupBy(transactions.withdrawls, 'category_name');
+
+    // Pre handle for duplicate expense sub categories
+    let withdrawlGroups = _.groupBy(transactions.withdrawls, (i) => {return `${i['category_name']}---${i['category_id']}`});
+    let wg = [];
+    _.forOwn(withdrawlGroups, (e, n) => {
+        wg[n.split('---')[0]] = e;
+    });
+    withdrawlGroups=wg
     delete withdrawlGroups['Uncategorized'];
 
     // Sum totals so we can calculate % later

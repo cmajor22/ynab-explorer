@@ -57,7 +57,6 @@ function App() {
 	const [incomeVisible, setIncomeVisible] = useState(true);
 	const [expensesVisible, setExpensesVisible] = useState(true);
 	const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken')??'');
-	const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken')??'');
 	const [ynabAPI, setYnabAPI] = useState(null);
 
 	const handleReportType = (event, newReportType) => {
@@ -273,7 +272,7 @@ function App() {
 					{/* Deposits */}
 					{ incomeVisible ? [
 						<Grid item xs={0} lg={0}></Grid>,
-						<Grid item xs={12} lg={6}>
+						<Grid item xs={12} lg={12}>
 							{depositsData?.nodes?.length>0 && <SankeyChart data={depositsData} titleFrom={'source'}/> }
 						</Grid>,
 						<Grid item xs={0} lg={0}></Grid>,
@@ -282,7 +281,7 @@ function App() {
 					{/* Expenses (With Groupings) */}
 					{ expensesVisible ? [
 						<Grid item xs={0} lg={0}></Grid>,
-						<Grid item xs={12} lg={6}>
+						<Grid item xs={12} lg={12}>
 							{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} titleFrom={'target'}/> }
 						</Grid>,
 						<Grid item xs={0} lg={0}></Grid>,
