@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
 
-const SankeyChart = ({ data }) => {
+const SankeyChart = ({ data, hideValues }) => {
   const chartRef = useRef(null);
   const formatValue = (n) => {return Number(n).toLocaleString(undefined, {minimumFractionDigits: 2})}
   const getTitle = (item) => {
@@ -11,7 +11,6 @@ const SankeyChart = ({ data }) => {
 
   useEffect(() => {
     const svg = d3.select(chartRef.current);
-    const hideValues = false;
     const width = 800;
     const height = 700;
 

@@ -1,6 +1,6 @@
 import './App.css';
 import { useEffect, useState } from 'react';
-import { Box, FormControl, Grid, InputLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Box, FormControl, Grid, InputLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup, Typography, FormGroup, FormControlLabel, Switch } from '@mui/material';
 import SankeyChart from './Sankey';
 import _ from 'lodash';
 import moment from 'moment/moment';
@@ -59,6 +59,8 @@ function App() {
 	const [expensesVisible, setExpensesVisible] = useState(true);
 	const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken')??'');
 	const [ynabAPI, setYnabAPI] = useState(null);
+	const [hideValues, setHideValues] = useState(true);
+
 
 	const handleReportType = (event, newReportType) => {
 		if(newReportType===null) {
@@ -233,7 +235,10 @@ function App() {
 							</Select>
 						</FormControl>
 					</Grid>
-					<Grid item xs={9} display='flex' justifyContent='flex-end'>
+					<Grid item xs={9} display='flex' justifyContent='flex-end' alignItems='center'>
+						<FormGroup>
+  							<FormControlLabel control={<Switch checked={hideValues} onChange={() => {setHideValues(!hideValues)}} />} label="Hide Values" />
+						</FormGroup>
 						<ToggleButtonGroup
 							value={reportYear}
 							exclusive
@@ -274,7 +279,7 @@ function App() {
 					{ incomeVisible ? [
 						<Grid item xs={0} lg={0}></Grid>,
 						<Grid item xs={12} lg={12}>
-							{depositsData?.nodes?.length>0 && <SankeyChart data={depositsData} titleFrom={'source'}/> }
+							{depositsData?.nodes?.length>0 && <SankeyChart data={depositsData} hideValues={hideValues}/> }
 						</Grid>,
 						<Grid item xs={0} lg={0}></Grid>,
 						<br />
@@ -283,7 +288,7 @@ function App() {
 					{ expensesVisible ? [
 						<Grid item xs={0} lg={0}></Grid>,
 						<Grid item xs={12} lg={12}>
-							{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} titleFrom={'target'}/> }
+							{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} hideValues={hideValues}/> }
 						</Grid>,
 						<Grid item xs={0} lg={0}></Grid>,
 						<br />
@@ -292,7 +297,7 @@ function App() {
 					{ bothVisible ? [
 						<Grid item xs={0} lg={0}></Grid>,
 						<Grid item xs={12} lg={12}>
-							{bothData?.nodes?.length>0 && <SankeyChart data={bothData} titleFrom={"mixed"}/> }
+							{bothData?.nodes?.length>0 && <SankeyChart data={bothData} hideValues={hideValues}/> }
 						</Grid>,
 						<Grid item xs={0} lg={0}></Grid>,
 						<br />
