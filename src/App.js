@@ -19,7 +19,10 @@ const darkTheme = createTheme({
 const classes = {
 	app: {
 		backgroundColor: '#282c34',
-		minHeight: '100vh',
+		minHeight: '100vh'
+	},
+	mainContainer: {
+		backgroundColor: '#282c34',
 		display: 'flex',
 		flexDirection: 'column',
 		alignItems: 'center',
@@ -59,7 +62,7 @@ function App() {
 	const [expensesVisible, setExpensesVisible] = useState(true);
 	const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken')??'');
 	const [ynabAPI, setYnabAPI] = useState(null);
-	const [hideValues, setHideValues] = useState(true);
+	const [hideValues, setHideValues] = useState(false);
 
 
 	const handleReportType = (event, newReportType) => {
@@ -142,13 +145,27 @@ function App() {
 				if(t.subtransactions.length!==0) {
 					t.subtransactions.forEach((s) => {
 						let newT = JSON.parse(JSON.stringify(t));
+						if(newT.payee_name.toLowerCase().includes('e-transfer')){
+							newT.payee_name="E-Transfers";
+						}
+						if(!(newT.account_name.includes("Questrade") && newT.payee_name.includes("Transfer : RBC - ")) &&
+							!(newT.account_name.includes("RBC -") && newT.payee_name.includes("Transfer : RBC")) &&
+							newT.payee_name!=="Reconciliation Balance Adjustment") {
+						};
 						newT.category_name=s.category_name;
 						newT.category_id=s.category_id;
 						newT.amount=s.amount;
 						newTrans.push(newT);
 					});
 				}else{
-					newTrans.push(t);
+					if(t.payee_name.toLowerCase().includes('e-transfer')){
+						t.payee_name="E-Transfers";
+					}
+					if(!(t.account_name.includes("Questrade") && t.payee_name.includes("Transfer : RBC - ")) &&
+						!(t.account_name.includes("RBC -") && t.payee_name.includes("Transfer : RBC")) &&
+						t.payee_name!=="Reconciliation Balance Adjustment") {
+						newTrans.push(t);
+					};
 				}
 			})
 			newTrans = JSON.parse(JSON.stringify(newTrans));
@@ -217,92 +234,94 @@ function App() {
 		<ThemeProvider theme={darkTheme}>
 			<CssBaseline />
 			<Box style={classes.app}>
-				<Grid container>
-					<Grid item xs={3}>
-						<FormControl>
-							<InputLabel id="budget-label">Budget</InputLabel>
-							<Select
-								labelId="budget-label"
-								id="budget-select"
-								value={selectedBudget}
-								label="Budget"
-								onChange={(e) => {setSelectedBudget(e.target.value)}}
-								style={{width: '300px'}}
-							>
-								{budgets.map((budget) => {
-									return <MenuItem key={budget.id} value={budget.id}>{budget.name}</MenuItem>
+				<Box style={classes.mainContainer}>
+					<Grid container>
+						<Grid item xs={3}>
+							<FormControl>
+								<InputLabel id="budget-label">Budget</InputLabel>
+								<Select
+									labelId="budget-label"
+									id="budget-select"
+									value={selectedBudget}
+									label="Budget"
+									onChange={(e) => {setSelectedBudget(e.target.value)}}
+									style={{width: '300px'}}
+								>
+									{budgets.map((budget) => {
+										return <MenuItem key={budget.id} value={budget.id}>{budget.name}</MenuItem>
+									})}
+								</Select>
+							</FormControl>
+						</Grid>
+						<Grid item xs={9} display='flex' justifyContent='flex-end' alignItems='center'>
+							<FormGroup>
+								<FormControlLabel control={<Switch checked={hideValues} onChange={() => {setHideValues(!hideValues)}} />} label="Hide Values" />
+							</FormGroup>
+							<ToggleButtonGroup
+								value={reportYear}
+								exclusive
+								onChange={handleReportYear}
+								>
+								{years.map((year) => {
+									return <ToggleButton key={year.substring(0,4)} value={year.substring(0,4)}><Typography>{year.substring(0,4)}</Typography></ToggleButton>
 								})}
-							</Select>
-						</FormControl>
+								<ToggleButton value="All"><Typography>All</Typography></ToggleButton>
+							</ToggleButtonGroup>
+						</Grid>
+						<Grid item xs={3}>
+							<ToggleButtonGroup
+								value={reportType}
+								exclusive
+								onChange={handleReportType}
+								>
+								<ToggleButton key={'Income'} value={'Income'}><Typography>Income</Typography></ToggleButton>
+								<ToggleButton key={'Expenses'} value={'Expenses'}><Typography>Expenses</Typography></ToggleButton>
+								<ToggleButton key={'All'} value={'All'}><Typography>All</Typography></ToggleButton>
+							</ToggleButtonGroup>
+						</Grid>
+						<Grid item xs={9} display='flex' justifyContent='flex-end'>
+							{reportYear !== 'All' && reportYear !== 'Custom' && <ToggleButtonGroup
+								value={reportMonth}
+								exclusive
+								onChange={handleReportMonth}
+								>
+								{months.map((month) => {
+									return <ToggleButton key={month} value={month}><Typography>{month.substring(0,3)}</Typography></ToggleButton>
+								})}
+							</ToggleButtonGroup>}
+						</Grid>
+						<Grid item xs={12}>
+							<br />
+						</Grid>
+						{/* Deposits */}
+						{ incomeVisible ? [
+							<Grid item xs={0} lg={0}></Grid>,
+							<Grid item xs={12} lg={12}>
+								{depositsData?.nodes?.length>0 && <SankeyChart data={depositsData} hideValues={hideValues}/> }
+							</Grid>,
+							<Grid item xs={0} lg={0}></Grid>,
+							<br />
+						] : null }
+						{/* Expenses (With Groupings) */}
+						{ expensesVisible ? [
+							<Grid item xs={0} lg={0}></Grid>,
+							<Grid item xs={12} lg={12}>
+								{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} hideValues={hideValues}/> }
+							</Grid>,
+							<Grid item xs={0} lg={0}></Grid>,
+							<br />
+						]: null }
+						{/* Expenses (With Groupings) */}
+						{ bothVisible ? [
+							<Grid item xs={0} lg={0}></Grid>,
+							<Grid item xs={12} lg={12}>
+								{bothData?.nodes?.length>0 && <SankeyChart data={bothData} hideValues={hideValues}/> }
+							</Grid>,
+							<Grid item xs={0} lg={0}></Grid>,
+							<br />
+						] : null }
 					</Grid>
-					<Grid item xs={9} display='flex' justifyContent='flex-end' alignItems='center'>
-						<FormGroup>
-  							<FormControlLabel control={<Switch checked={hideValues} onChange={() => {setHideValues(!hideValues)}} />} label="Hide Values" />
-						</FormGroup>
-						<ToggleButtonGroup
-							value={reportYear}
-							exclusive
-							onChange={handleReportYear}
-							>
-							{years.map((year) => {
-								return <ToggleButton key={year.substring(0,4)} value={year.substring(0,4)}><Typography>{year.substring(0,4)}</Typography></ToggleButton>
-							})}
-							<ToggleButton value="All"><Typography>All</Typography></ToggleButton>
-						</ToggleButtonGroup>
-					</Grid>
-					<Grid item xs={3}>
-						<ToggleButtonGroup
-							value={reportType}
-							exclusive
-							onChange={handleReportType}
-							>
-							<ToggleButton key={'Income'} value={'Income'}><Typography>Income</Typography></ToggleButton>
-							<ToggleButton key={'Expenses'} value={'Expenses'}><Typography>Expenses</Typography></ToggleButton>
-							<ToggleButton key={'All'} value={'All'}><Typography>All</Typography></ToggleButton>
-						</ToggleButtonGroup>
-					</Grid>
-					<Grid item xs={9} display='flex' justifyContent='flex-end'>
-						{reportYear !== 'All' && reportYear !== 'Custom' && <ToggleButtonGroup
-							value={reportMonth}
-							exclusive
-							onChange={handleReportMonth}
-							>
-							{months.map((month) => {
-								return <ToggleButton key={month} value={month}><Typography>{month.substring(0,3)}</Typography></ToggleButton>
-							})}
-						</ToggleButtonGroup>}
-					</Grid>
-					<Grid item xs={12}>
-						<br />
-					</Grid>
-					{/* Deposits */}
-					{ incomeVisible ? [
-						<Grid item xs={0} lg={0}></Grid>,
-						<Grid item xs={12} lg={12}>
-							{depositsData?.nodes?.length>0 && <SankeyChart data={depositsData} hideValues={hideValues}/> }
-						</Grid>,
-						<Grid item xs={0} lg={0}></Grid>,
-						<br />
-					] : null }
-					{/* Expenses (With Groupings) */}
-					{ expensesVisible ? [
-						<Grid item xs={0} lg={0}></Grid>,
-						<Grid item xs={12} lg={12}>
-							{withdrawlsData?.nodes?.length>0 && <SankeyChart data={withdrawlsData} hideValues={hideValues}/> }
-						</Grid>,
-						<Grid item xs={0} lg={0}></Grid>,
-						<br />
-					]: null }
-					{/* Expenses (With Groupings) */}
-					{ bothVisible ? [
-						<Grid item xs={0} lg={0}></Grid>,
-						<Grid item xs={12} lg={12}>
-							{bothData?.nodes?.length>0 && <SankeyChart data={bothData} hideValues={hideValues}/> }
-						</Grid>,
-						<Grid item xs={0} lg={0}></Grid>,
-						<br />
-					] : null }
-				</Grid>
+				</Box>
 			</Box>
 		</ThemeProvider>
   );

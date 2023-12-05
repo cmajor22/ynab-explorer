@@ -32,17 +32,24 @@ function FullData(categories, grouped) {
         });
     }else if(totalWithdrawls>totalDeposits){
         // Go to Deficit
+        let inOutIndex = 0;
+        _.forEach(nodes, (n, i) => {
+            if(n.name==="Max In / Out") {
+                inOutIndex=i;
+            }
+        })
         nodes.push({
             "node": nodes.length,
             "name": 'Deficit',
             "color": '#FFA500',
         });
         links.push({
-            "source": nodes.length-2,
-            "target": nodes.length-1,
+            "source": nodes.length-1,
+            "target": inOutIndex,
             "value": Number(totalWithdrawls-totalDeposits),
             "percentage": Number(((totalWithdrawls-totalDeposits)/totalDeposits)*100).toFixed(2),
-            "titleFrom": 'target'
+            "titleFrom": 'target',
+            "color": '#FFA500'
         });
     }else{
         // Balanced

@@ -32,7 +32,7 @@ function Deposits(transactions) {
     });
     nodes.push({
         "node": nodes.length,
-        "name": 'Total Deposits',
+        "name": 'Max In / Out',
         "color": "#00FF00"
     })
 

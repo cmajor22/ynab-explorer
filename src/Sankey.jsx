@@ -12,11 +12,22 @@ const SankeyChart = ({ data, hideValues }) => {
   useEffect(() => {
     const svg = d3.select(chartRef.current);
     const width = 800;
-    const height = 700;
+    let height = 1000;
+    if(data.nodes.length<10){
+      height=400;
+    }else if(data.nodes.length<30){
+      height=500;
+    }else if(data.nodes.length<50){
+      height=600;
+    }else if(data.nodes.length<75){
+      height=700;
+    }else if(data.nodes.length<100){
+      height=800;
+    }
 
     svg.selectAll('*').remove()
     svg
-      .attr('viewBox','0 0 '+width+' '+height)
+      .attr('viewBox','0 -5 '+width+' '+height)
       .attr('preserveAspectRatio','xMinYMin')
       .append("g");
 
@@ -38,7 +49,9 @@ const SankeyChart = ({ data, hideValues }) => {
         .style('fill', 'none')
         .style('stroke-opacity', .15)
         .style('stroke', d => {
-          if (d.target.color) {
+          if(d.source.name==="Deficit"){
+            return d.source.color;
+          }else if (d.target.color) {
             return d.target.color;
           }
           return d.source.color;
